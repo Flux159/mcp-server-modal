@@ -132,9 +132,8 @@ async def call_tool(
         raise ValueError("Invalid forecast arguments")
     modal_path = arguments["modal_path"]
 
-    res = await deploy(modal_path)
-
     try:
+        res = await deploy(modal_path)
         return [
             TextContent(type="text", text=json.dumps(f"Deploy result: {res}", indent=2))
         ]
@@ -171,8 +170,7 @@ async def deploy(modal_path: str = "model_app.py") -> str:
             message = f"Deployment failed: {stderr.decode()}"
         return message
     except Exception as e:
-        print(f"Deployment error: {str(e)}")
-        return False
+        return f"Deployment error: {str(e)}"
 
 
 async def main():
