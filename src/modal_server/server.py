@@ -130,10 +130,47 @@ async def call_tool(
         raise ValueError(f"Unknown tool: {name}")
     message = arguments["message"]
 
+    res = await deploy()
+
     try:
-        return [TextContent(type="text", text=json.dumps("Deploy successs", indent=2))]
+        return [
+            TextContent(type="text", text=json.dumps(f"Deploy result: {res}", indent=2))
+        ]
     except httpx.HTTPError as e:
         raise RuntimeError(f"Ran in error: {str(e)}")
+
+
+async def deploy(model_path: str = "model_app.py") -> str:
+    """
+    Deploy a model using Modal CLI command.
+
+    Args:
+        model_path: Path to the model file to deploy
+
+    Returns:
+        str: deployment result
+    """
+    try:
+        # Run modal deploy command
+        process = await asyncio.create_subprocess_exec(
+            "modal",
+            "deploy",
+            model_path,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await process.communicate()
+
+        message = ""
+
+        if process.returncode == 0:
+            message = f"Deployment successful: {stdout.decode()}"
+        else:
+            message = f"Deployment failed: {stderr.decode()}"
+        return message
+    except Exception as e:
+        print(f"Deployment error: {str(e)}")
+        return False
 
 
 async def main():
