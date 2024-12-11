@@ -113,7 +113,7 @@ async def handle_list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "message": {"type": "string"},
+                    "modal_path": {"type": "string"},
                 },
                 "required": ["message"],
             },
@@ -128,9 +128,11 @@ async def call_tool(
     """Handle tool calls for weather forecasts."""
     if name != "deploy":
         raise ValueError(f"Unknown tool: {name}")
-    message = arguments["message"]
+    if not isinstance(arguments, dict) or "modal_path" not in arguments:
+        raise ValueError("Invalid forecast arguments")
+    modal_path = arguments["modal_path"]
 
-    res = await deploy()
+    res = await deploy(modal_path)
 
     try:
         return [
@@ -140,12 +142,12 @@ async def call_tool(
         raise RuntimeError(f"Ran in error: {str(e)}")
 
 
-async def deploy(model_path: str = "model_app.py") -> str:
+async def deploy(modal_path: str = "model_app.py") -> str:
     """
     Deploy a model using Modal CLI command.
 
     Args:
-        model_path: Path to the model file to deploy
+        modal_path: Path to the modal file to deploy
 
     Returns:
         str: deployment result
@@ -155,7 +157,7 @@ async def deploy(model_path: str = "model_app.py") -> str:
         process = await asyncio.create_subprocess_exec(
             "modal",
             "deploy",
-            model_path,
+            modal_path,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
