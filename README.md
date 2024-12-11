@@ -13,17 +13,30 @@ pip install modal
 python3 -m modal setup
 ```
 
-Then setup the server in your Claude desktop app:
+Then setup the server with the filesystem server in your Claude desktop app:
 
 ```
-"mcp-modlal-server": {
-    "command": "uv",
-    "args": [
-        "--directory",
-        "/path/to/mcp-server-modal",
-        "run",
-        "modal-server"
-    ]
+{
+   "mcpServers": {
+        "mcp-server-modal": {
+            "command": "uv",
+            "args": [
+                "--directory",
+                "/path/to/mcp-server-modal",
+                "run",
+                "modal-server"
+            ]
+        },
+        "filesystem": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-filesystem",
+				"/Users/user/Desktop/",
+                "/path/to/other/dir"
+			]
+		}
+   }
 }
 ```
 
@@ -35,15 +48,4 @@ In claude, give a python script and ask it to create a modal application and dep
 
 ```
 npx @modelcontextprotocol/inspector uv --directory /path/to/mcp-server-modal run modal-server
-```
-
-```
-filesystem": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/path/to/"
-      ]
-    },
 ```
