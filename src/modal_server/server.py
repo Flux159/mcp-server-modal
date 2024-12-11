@@ -1,6 +1,7 @@
 import json
 import logging
 from collections.abc import Sequence
+import subprocess
 from typing import Any
 
 import httpx
@@ -133,7 +134,7 @@ async def call_tool(
     modal_path = arguments["modal_path"]
 
     try:
-        res = await deploy(modal_path)
+        res = deploy(modal_path)
         return [
             TextContent(type="text", text=json.dumps(f"Deploy result: {res}", indent=2))
         ]
@@ -141,7 +142,7 @@ async def call_tool(
         raise RuntimeError(f"Ran in error: {str(e)}")
 
 
-async def deploy(modal_path: str = "model_app.py") -> str:
+def deploy(modal_path: str = "model_app.py") -> str:
     """
     Deploy a model using Modal CLI command.
 
@@ -153,22 +154,18 @@ async def deploy(modal_path: str = "model_app.py") -> str:
     """
     try:
         # Run modal deploy command
-        process = await asyncio.create_subprocess_exec(
-            "modal",
-            "deploy",
-            modal_path,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, stderr = await process.communicate()
-
-        message = ""
-
+        process = subprocess.run(["modal", "deploy", modal_path], capture_output=True, text=True)
+        
+        # Check if the command was successful
         if process.returncode == 0:
-            message = f"Deployment successful: {stdout.decode()}"
+            return f"Deploy success: {process.stdout}"
         else:
-            message = f"Deployment failed: {stderr.decode()}"
-        return message
+            raise RuntimeError(f"Deploy failed: {process.stderr}")
+        # if process.returncode == 0:
+        #     message = f"Deployment successful: {stdout.decode()}"
+        # else:
+        #     message = f"Deployment failed: {stderr.decode()}"
+        # return message
     except Exception as e:
         return f"Deployment error: {str(e)}"
 
